@@ -6,6 +6,9 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
+
+#include <cmath>
 
 #include "mpir/mpirxx.h"
 

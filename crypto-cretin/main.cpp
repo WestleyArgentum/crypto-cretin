@@ -17,6 +17,6 @@ int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDi
   std::ifstream in2("test_enc.txt", std::ios::in);
   std::ofstream out2("test_dec.txt", std::ios::binary | std::ios::out);
 
-  Decrypt(out2, in2, mpz_class(N).get_mpz_t(), mpz_class("5").get_mpz_t());
+  Decrypt(out2, in2);
   return 0;
 }
