@@ -5,5 +5,10 @@
 #include "Console.hpp"
 
 #include <iostream>
+#include <fstream>
+
+#include "mpir/mpirxx.h"
+
+#include "Debug.hpp"
 
 #endif

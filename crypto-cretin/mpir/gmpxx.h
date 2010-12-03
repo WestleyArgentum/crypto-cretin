@@ -1,6 +1,8 @@
-/* gmpxx.h -- C++ class wrapper for GMP types.  -*- C++ -*-
+/* mpirxx.h -- C++ class wrapper for GMP types.  -*- C++ -*-
 
 Copyright 2001, 2002, 2003, 2006, 2008 Free Software Foundation, Inc.
+
+Copyright 2009 William Hart
 
 This file is part of the GNU MP Library.
 
@@ -25,7 +27,7 @@ along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
    for other compilers, I don't know */
 #ifdef __GNUC__
 #if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 91)
-#error gmpxx.h requires g++ version 2.91 (egcs 1.1.2) or higher
+#error mpirxx.h requires g++ version 2.91 (egcs 1.1.2) or higher
 #endif
 #endif
 
@@ -38,7 +40,7 @@ along with the GNU MP Library.  If not, see http://www.gnu.org/licenses/.  */
 #include <string>
 #include <stdexcept>
 #include <cfloat>
-#include <gmp.h>
+#include <mpir.h>
 
 
 /**************** Function objects ****************/
@@ -1352,22 +1354,23 @@ struct __gmp_rand_function
 /* this is much the same as gmp_allocated_string in gmp-impl.h
    since gmp-impl.h is not publicly available, I redefine it here
    I use a different name to avoid possible clashes */
-
 extern "C" {
-  typedef void (*__gmp_freefunc_t) (void *, size_t);
+struct __gmp_alloc_cstring_c
+{
+   void (*free_func) (void *, size_t);
+};
 }
-struct __gmp_alloc_cstring
+
+struct __gmp_alloc_cstring : __gmp_alloc_cstring_c
 {
   char *str;
   __gmp_alloc_cstring(char *s) { str = s; }
   ~__gmp_alloc_cstring()
   {
-    __gmp_freefunc_t freefunc;
-    mp_get_memory_functions (NULL, NULL, &freefunc);
-    (*freefunc) (str, std::strlen(str)+1);
+    mp_get_memory_functions (NULL, NULL, &free_func);
+    (*free_func) (str, std::strlen(str)+1);
   }
 };
-
 
 // general expression template class
 template <class T, class U>
@@ -1681,9 +1684,9 @@ public:
   __GMP_DECLARE_COMPOUND_OPERATOR(operator/=)
   __GMP_DECLARE_COMPOUND_OPERATOR(operator%=)
 
-  __GMP_DECLARE_COMPOUND_OPERATOR(operator&=)
-  __GMP_DECLARE_COMPOUND_OPERATOR(operator|=)
-  __GMP_DECLARE_COMPOUND_OPERATOR(operator^=)
+  __GMPP_DECLARE_COMPOUND_OPERATOR(operator&=)
+  __GMPP_DECLARE_COMPOUND_OPERATOR(operator|=)
+  __GMPP_DECLARE_COMPOUND_OPERATOR(operator^=)
 
   __GMP_DECLARE_COMPOUND_OPERATOR_UI(operator<<=)
   __GMP_DECLARE_COMPOUND_OPERATOR_UI(operator>>=)
@@ -2838,8 +2841,6 @@ public:                                                                     \
 __GMPZQ_DEFINE_EXPR(__gmp_binary_plus)
 __GMPZQ_DEFINE_EXPR(__gmp_binary_minus)
 
-
-
 /**************** Macros for defining functions ****************/
 /* Results of operators and functions are instances of __gmp_expr<T, U>.
    T determines the numerical type of the expression: it can be either
@@ -3071,6 +3072,9 @@ __GMPN_DEFINE_COMPOUND_OPERATOR(type, fun, eval_fun)
 #define __GMPZ_DEFINE_COMPOUND_OPERATOR(fun, eval_fun) \
 __GMP_DEFINE_COMPOUND_OPERATOR(mpz, fun, eval_fun)
 
+#define __GMPZZ_DEFINE_COMPOUND_OPERATOR(fun, eval_fun) \
+__GMPP_DEFINE_COMPOUND_OPERATOR(mpz, fun, eval_fun)
+
 #define __GMPQ_DEFINE_COMPOUND_OPERATOR(fun, eval_fun) \
 __GMP_DEFINE_COMPOUND_OPERATOR(mpq, fun, eval_fun)
 
@@ -3171,9 +3175,9 @@ __GMPZ_DEFINE_COMPOUND_OPERATOR(operator*=, __gmp_binary_multiplies)
 __GMPZ_DEFINE_COMPOUND_OPERATOR(operator/=, __gmp_binary_divides)
 __GMPZ_DEFINE_COMPOUND_OPERATOR(operator%=, __gmp_binary_modulus)
 
-__GMPZ_DEFINE_COMPOUND_OPERATOR(operator&=, __gmp_binary_and)
-__GMPZ_DEFINE_COMPOUND_OPERATOR(operator|=, __gmp_binary_ior)
-__GMPZ_DEFINE_COMPOUND_OPERATOR(operator^=, __gmp_binary_xor)
+__GMPZZ_DEFINE_COMPOUND_OPERATOR(operator&=, __gmp_binary_and)
+__GMPZZ_DEFINE_COMPOUND_OPERATOR(operator|=, __gmp_binary_ior)
+__GMPZZ_DEFINE_COMPOUND_OPERATOR(operator^=, __gmp_binary_xor)
 
 __GMPZ_DEFINE_COMPOUND_OPERATOR_UI(operator<<=, __gmp_binary_lshift)
 __GMPZ_DEFINE_COMPOUND_OPERATOR_UI(operator>>=, __gmp_binary_rshift)
@@ -3260,8 +3264,8 @@ public:
 
 extern "C" {
   typedef void __gmp_randinit_default_t (gmp_randstate_t);
-  typedef void __gmp_randinit_lc_2exp_t (gmp_randstate_t, mpz_srcptr, unsigned long int, unsigned long int);
-  typedef int __gmp_randinit_lc_2exp_size_t (gmp_randstate_t, unsigned long int);
+  typedef void __gmp_randinit_lc_2exp_t (gmp_randstate_t, mpz_srcptr, unsigned long int, mp_bitcnt_t);
+  typedef int __gmp_randinit_lc_2exp_size_t (gmp_randstate_t, mp_bitcnt_t);
 }
 
 class gmp_randclass
@@ -3280,7 +3284,7 @@ public:
       {
       case GMP_RAND_ALG_LC: // no other cases for now
       default:
-	gmp_randinit(state, alg, size);
+	gmp_randinit_lc_2exp_size(state, size);
 	break;
       }
   }
@@ -3317,7 +3321,7 @@ public:
   __gmp_expr<mpz_t, __gmp_urandomm_value> get_z_range(const mpz_class &z)
   { return __gmp_expr<mpz_t, __gmp_urandomm_value>(state, z); }
 
-  __gmp_expr<mpf_t, __gmp_urandomb_value> get_f(mp_bitcnt_t prec = 0)
+  __gmp_expr<mpf_t, __gmp_urandomb_value> get_f(unsigned long int prec = 0)
   { return __gmp_expr<mpf_t, __gmp_urandomb_value>(state, prec); }
 };
 
@@ -3331,6 +3335,7 @@ public:
 #undef __GMP_DECLARE_INCREMENT_OPERATOR
 
 #undef __GMPZQ_DEFINE_EXPR
+#undef __GMP_DEFINE_TERNARY_EXPR
 
 #undef __GMP_DEFINE_UNARY_FUNCTION
 #undef __GMP_DEFINE_UNARY_TYPE_FUNCTION
@@ -3355,7 +3360,15 @@ public:
 #undef __GMPN_DEFINE_BINARY_TYPE_FUNCTION
 #undef __GMP_DEFINE_BINARY_TYPE_FUNCTION
 
+#undef __GMPP_DECLARE_COMPOUND_OPERATOR
+#undef __GMPN_DECLARE_COMPOUND_OPERATOR
+#undef __GMP_DECLARE_COMPOUND_OPERATOR
+
+#undef __GMP_DECLARE_COMPOUND_OPERATOR_UI
+#undef __GMP_DECLARE_INCREMENT_OPERATOR
+
 #undef __GMPZ_DEFINE_COMPOUND_OPERATOR
+#undef __GMPZZ_DEFINE_COMPOUND_OPERATOR
 #undef __GMPZN_DEFINE_COMPOUND_OPERATOR
 #undef __GMPZNN_DEFINE_COMPOUND_OPERATOR
 #undef __GMPZNS_DEFINE_COMPOUND_OPERATOR
@@ -3372,6 +3385,8 @@ public:
 #undef __GMPN_DEFINE_COMPOUND_OPERATOR
 #undef __GMP_DEFINE_COMPOUND_OPERATOR
 
+#undef __GMPZ_DEFINE_COMPOUND_OPERATOR
+#undef __GMPZZ_DEFINE_COMPOUND_OPERATOR
 #undef __GMPQ_DEFINE_COMPOUND_OPERATOR
 #undef __GMPF_DEFINE_COMPOUND_OPERATOR
 
