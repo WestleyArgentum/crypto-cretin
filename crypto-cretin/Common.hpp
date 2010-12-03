@@ -8,6 +8,8 @@
 #include <fstream>
 #include <sstream>
 
+#include <string>
+#include <map>
 #include <cmath>
 
 #include "mpir/mpirxx.h"
