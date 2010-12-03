@@ -62,8 +62,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="mpird.lib mpirxxd.lib"
 				OutputFile="$(OutDir)\crypto-cretin.exe"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="mpir/"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -137,8 +140,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="mpir.lib mpirxx.lib"
 				OutputFile="$(OutDir)\crypto-cretin.exe"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="mpir/"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -199,6 +204,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Debug.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\WindowsHeaders.hpp"
 				>
 			</File>
@@ -212,6 +221,26 @@
 			</File>
 			<File
 				RelativePath=".\Console.hpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Encryption"
+			>
+			<File
+				RelativePath=".\Encrypt.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Encrypt.hpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="MPIR"
+			>
+			<File
+				RelativePath=".\mpir\mpirxx.h"
 				>
 			</File>
 		</Filter>
