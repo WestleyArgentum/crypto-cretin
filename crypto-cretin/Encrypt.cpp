@@ -1,0 +1,112 @@
+//=======================================================\\
+
+/*!
+
+      @file        Encrypt.cpp
+
+      @author      Chris Schell
+ 
+      @brief
+          Quick implementation of RSA encryption and decryption.
+
+	  Copyright © 2009 DigiPen (USA) Corporation, All Rights Reserved
+    Reproduction or disclosure of this file or its contents without 
+    the prior written consent of DigiPen Institute of Technology is prohibited.
+
+*/
+
+//========================================================\\
+
+void Encrypt(std::ofstream& oStream, std::ifstream& iStream, const mpz_ptr N, const mpz_ptr e)
+{
+  std::stringstream m;
+  std::string file;
+  unsigned long Size(0);
+
+  mpz_t message;
+  mpz_init(message);
+
+  //while not end of file
+  while(!iStream.eof())
+  {
+    //grab 40 bits from the input file
+    char data[5] = {0,0,0,0,0};
+    iStream.read(data, 5);
+    Size += iStream.gcount();
+
+    //shove those 40 bits into mpz_t: message
+    mpz_import(message, 5, 1, sizeof(char), 1, 0, data);
+
+    //m = m^e(mod N)
+    mpz_powm(message, message, e, N);
+
+    //write out m
+    m << message << std::endl;
+    //file += m.str();
+  }
+
+  mpz_clear(message);
+
+  oStream << "N "         << N    << std::endl
+          << "E "         << e    << std::endl
+          << "ChunkSize " << 5    << std::endl
+          << "Size "      << Size << std::endl
+          << m.str() << std::endl;
+}
+
+void Decrypt(std::ofstream& oStream, std::ifstream& iStream)
+{
+  std::string temp;
+  mpz_class N;
+  mpz_class e;
+  unsigned ChunkSize;
+  unsigned long Size;
+
+  iStream >> temp >> N
+          >> temp >> e
+          >> temp >> ChunkSize
+          >> temp >> Size;
+
+
+  ///@todo Actually factor N into p and q
+  mpz_class p("3954889"),
+            q("3954997");
+
+  //get phi(N) = (p-1)(q-1)
+  mpz_class phi = (p-1)*(q-1);
+
+  //get d = multinv(e, phi(N))
+  mpz_class d(0);
+  mpz_invert(d.get_mpz_t(), e.get_mpz_t(), phi.get_mpz_t());
+
+  Assert(d * mpz_class(e) % phi == mpz_class(1), "e has no inverse. e and phi(N) are most likely not relatively prime.");
+
+   //while not end of file
+  while(!iStream.eof())
+  {
+    //grab line
+    std::string message;
+    iStream >> message;
+
+    if(message.empty() || message[0] == '/n')
+      return;
+
+    //shove that string into mpz_t: m
+    mpz_class m(message);
+
+    //m = m^d(mod N)
+    mpz_powm(m.get_mpz_t(), m.get_mpz_t(), d.get_mpz_t(), N.get_mpz_t());
+
+    //shove m into 40 bit buffer
+    char data[5] = {0,0,0,0,0};
+    mpz_export(data, 0, 1, sizeof data, 1, 0, m.get_mpz_t());
+
+    unsigned SizeToWrite = std::min(ChunkSize, unsigned(Size));
+
+    //write out m binary
+    oStream.write(data, SizeToWrite);
+
+    Size -= ChunkSize;
+  }
+
+}
