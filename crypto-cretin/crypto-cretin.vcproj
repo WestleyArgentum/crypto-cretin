@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			CharacterSet="1"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpird.lib mpirxxd.lib"
+				AdditionalDependencies="comctl32.lib mpird.lib mpirxxd.lib"
 				OutputFile="$(OutDir)\crypto-cretin.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="mpir/"
@@ -98,7 +98,7 @@
 			OutputDirectory="$(SolutionDir)bin\"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			CharacterSet="1"
+			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -140,7 +140,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpir.lib mpirxx.lib"
+				AdditionalDependencies="comctl32.lib mpir.lib mpirxx.lib"
 				OutputFile="$(OutDir)\crypto-cretin.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="mpir/"
@@ -243,6 +243,42 @@
 				RelativePath=".\mpir\mpirxx.h"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="Window"
+			>
+			<File
+				RelativePath=".\Window.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Window.hpp"
+				>
+			</File>
+			<Filter
+				Name="DialogBoxes"
+				>
+				<File
+					RelativePath=".\FileDialogs.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FileDialogs.hpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Components"
+				>
+				<File
+					RelativePath=".\Components.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Components.hpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath=".\main.cpp"
