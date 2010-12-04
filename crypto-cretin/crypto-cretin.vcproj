@@ -208,6 +208,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FileInfo.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FileInfo.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\HelperFunctions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\HelperFunctions.hpp"
+				>
+			</File>
+			<File
 				RelativePath=".\WindowsHeaders.hpp"
 				>
 			</File>

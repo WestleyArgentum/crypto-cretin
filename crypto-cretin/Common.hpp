@@ -15,5 +15,7 @@
 #include "mpir/mpirxx.h"
 
 #include "Debug.hpp"
+#include "HelperFunctions.hpp"
+#include "FileInfo.hpp"
 
 #endif
