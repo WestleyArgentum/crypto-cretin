@@ -320,68 +320,10 @@ int main_fn( int argc, char* argv[] )
     return -1;
   }
 
-  std::string N = "15641574130333";
+  /*std::string N = "15641574130333";
   std::string p = "3954889",
-              q = "3954997";
+              q = "3954997";*/
 
-  Timer timer;
-
-  BrentManager = new BrentJobManager( mpz_class(N) );
-
-  BrentManager->RunBrentFactorization( 10 );
-
-  //std::string N = "15641574130333";
-  //std::string p = "99990001", 
-  //            q = "2796203";
-
-  //std::string N = "15641574130333";
-  //std::string p = "2147483647", 
-  //            q = "2305843009213693951";
-
-  std::cout << "Generating P...";
-  mpz_class P = 0, Q = 0, lN = 0;
-  mpz_ui_pow_ui(P.get_mpz_t(), 2, 31u);
-  --P;
-  std::cout << " Done" << std::endl;
-  
-  std::cout << "Generating Q...";
-  mpz_ui_pow_ui(Q.get_mpz_t(), 2, 61u);
-  --Q;
-  std::cout << " Done" << std::endl;
-
-  std::cout << "Generating N...";
-  lN = P*Q;
-  std::cout << " Done" << std::endl;
-
-  std::cout << "Beginning factorization...";
-  mpz_class lBrent = BrentFactorization(lN);
-  std::cout << " Done" << std::endl;
-
-  if(lBrent == P || lBrent == Q)
-    std::cout << "P or Q" << std::endl;
-  else if(lBrent == lN)
-    std::cout << "N" << std::endl;
-  else
-    std::cout << "Neither" << std::endl;
-
-  std::cin.get();
-  return 0;
-
-    // Create the job manager to factor the N.
-  BrentManager = new BrentJobManager( mpz_class(N) );
-    // Factor the N:
-  BrentManager->RunBrentFactorization( 10 );
-
-  std::ifstream in("test.pdf", std::ios::binary | std::ios::in);
-  std::ofstream out("test_enc.txt");
-
-  Encrypt(out, in, mpz_class(N).get_mpz_t(), mpz_class("5").get_mpz_t());
-  out.close();
-
-  std::ifstream in2("test_enc.txt", std::ios::in);
-  std::ofstream out2("test_dec.pdf", std::ios::binary | std::ios::out);
-
-  Decrypt(out2, in2);
 }
 
 
@@ -389,7 +331,10 @@ int main_fn( int argc, char* argv[] )
 int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDisplayParameters)
 {
     // Randomness initialization:
-  gmp_randinit_default(gRandomState);
+  {
+    Lock lock ( mutex_gRandom );
+    gmp_randinit_default(gRandomState);
+  }
 
     // Create debuging console:
   CreateConsole();
@@ -402,7 +347,10 @@ int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDi
   int return_code = main_fn( argc, argv );
 
     // Deinit random:
-  gmp_randclear(gRandomState);
+  {
+    Lock lock ( mutex_gRandom );
+    gmp_randclear(gRandomState);
+  }
 
   printf( "Press enter to continue...\n" );
   std::cin.get();

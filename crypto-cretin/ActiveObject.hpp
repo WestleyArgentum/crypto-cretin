@@ -17,7 +17,7 @@ flush for your own thread.
 class ActiveObject
 {
 public:
-    typedef void (*StaticFunction)( unsigned id );
+  typedef void (*StaticFunction)( unsigned id );
 
 	ActiveObject          ( unsigned id_, StaticFunction callback_fn_ );
 	virtual ~ActiveObject ();
@@ -27,6 +27,8 @@ public:
 
 	void Kill ();  //^? must call before exiting... perhaps I should do an isDying check in 
 								 // the destructor and clean up (just in case)
+
+  HANDLE GetHandle () { return mythread.GetHandle(); }
 
 protected:
 	virtual void InitThread  () = 0;
