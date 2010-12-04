@@ -78,10 +78,15 @@ void Decrypt(std::ofstream& out, std::ifstream& in)
      >> temp >> ChunkSize
      >> temp >> Size;
 
-  BrentManager.Init( mpz_class(N) );
-  BrentManager.RunBrentFactorization( 10 );
-  mpz_class p = BrentManager.GetResult();
+  //BrentManager.Init( mpz_class(N) );
+  //BrentManager.RunBrentFactorization( 4 );
+  std::cout << "Factoring N = " << N << "...";
+  std::cout.flush();
+  mpz_class p = BrentFactorization( N );
+  std::cout << " ...done!" << std::endl;
   mpz_class q = N / p;
+
+  std::cout << "P = " << p << std::endl << "Q = " << q << std::endl;
 
 
   //get phi(N) = (p-1)(q-1)
@@ -92,6 +97,8 @@ void Decrypt(std::ofstream& out, std::ifstream& in)
   mpz_invert(d.get_mpz_t(), e.get_mpz_t(), phi.get_mpz_t());
 
   Assert(d * mpz_class(e) % phi == mpz_class(1), "e has no inverse. e and phi(N) are most likely not relatively prime.");
+
+  std::cout << "d = " << d << std::endl;
 
   char* data = (char*)::operator new(ChunkSize);
 
