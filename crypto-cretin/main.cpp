@@ -164,6 +164,43 @@ int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDi
   std::string p = "3954889", 
               q = "3954997";
 
+  //std::string N = "15641574130333";
+  //std::string p = "99990001", 
+  //            q = "2796203";
+
+  //std::string N = "15641574130333";
+  //std::string p = "2147483647", 
+  //            q = "2305843009213693951";
+
+  std::cout << "Generating P...";
+  mpz_class P = 0, Q = 0, lN = 0;
+  mpz_ui_pow_ui(P.get_mpz_t(), 2, 31u);
+  --P;
+  std::cout << " Done" << std::endl;
+  
+  std::cout << "Generating Q...";
+  mpz_ui_pow_ui(Q.get_mpz_t(), 2, 61u);
+  --Q;
+  std::cout << " Done" << std::endl;
+
+  std::cout << "Generating N...";
+  lN = P*Q;
+  std::cout << " Done" << std::endl;
+
+  std::cout << "Beginning factorization...";
+  mpz_class lBrent = BrentFactorization(lN);
+  std::cout << " Done" << std::endl;
+
+  if(lBrent == P || lBrent == Q)
+    std::cout << "P or Q" << std::endl;
+  else if(lBrent == lN)
+    std::cout << "N" << std::endl;
+  else
+    std::cout << "Neither" << std::endl;
+
+  std::cin.get();
+  return 0;
+
     // Create our window's application:
   Window *main_window = Window::GetInstance();
   main_window->Create( "Crypto-cretin", WinProc, iDisplayParameters, "Crypto-cretin", 800, 600 );
