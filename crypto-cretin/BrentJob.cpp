@@ -3,6 +3,8 @@
 
 #include "BrentJob.hpp"
 
+#include "Timer.hpp"
+
 
 BrentJobManager BrentManager;
 
@@ -63,6 +65,9 @@ mpz_class BrentFactorization(const mpz_class &N)
     mpz_urandomm(y.get_mpz_t(), gRandomState, N.get_mpz_t());
     mpz_urandomm(c.get_mpz_t(), gRandomState, N.get_mpz_t());
     mpz_urandomm(m.get_mpz_t(), gRandomState, N.get_mpz_t());
+    std::cout << "1: " << y << std::endl;
+    std::cout << "2: " << c << std::endl;
+    std::cout << "3: " << m << std::endl;
   }
 
   mpz_class g = 1,
@@ -71,14 +76,32 @@ mpz_class BrentFactorization(const mpz_class &N)
     lMin = N + 1, //bad (impossible) minimum value to start off with
     lAbs, x, k;
 
+  unsigned interation = 0;
+  Timer timer;
+
   while(g == 1)
   {
     x = y;
 
+    printf( "Start..." );
+    timer.Start();
+
+    mpz_class temp;
     for(mpz_class i = 0; i < r; ++i)
     {
-      y = ((y*y)%N + c)%N;
+      // ----------
+      //  y = ((y*y)%N + c)%N;
+      mpz_mul( temp.get_mpz_t(), y.get_mpz_t(), y.get_mpz_t() );
+      mpz_add( temp.get_mpz_t(), temp.get_mpz_t(), c.get_mpz_t() );
+      mpz_mod( temp.get_mpz_t(), temp.get_mpz_t(), N.get_mpz_t() );
+      y = temp;
+      // ----------
     }
+
+    timer.Stop();
+    printf( "%lf ", timer.TimeElapsed() );
+    printf( "step 2..." );
+    timer.Start();
 
     k = 0;
 
@@ -86,21 +109,48 @@ mpz_class BrentFactorization(const mpz_class &N)
     {
       ys = y;
 
-      lMin = m < r-k ? m : r-k;
+      mpz_sub( temp.get_mpz_t(), r.get_mpz_t(), k.get_mpz_t() );
+
+      lMin = m < temp ? m : temp;
       for(mpz_class i = 0; i < lMin; ++i)
       {
-        y = ((y*y)%N + c)%N;
+        // ----------
+        //  y = ((y*y)%N + c)%N;
+        mpz_mul( temp.get_mpz_t(), y.get_mpz_t(), y.get_mpz_t() );
+        mpz_add( temp.get_mpz_t(), temp.get_mpz_t(), c.get_mpz_t() );
+        mpz_mod( temp.get_mpz_t(), temp.get_mpz_t(), N.get_mpz_t() );
+        y = temp;
+        // ----------
 
-        mpz_abs(lAbs.get_mpz_t(), mpz_class(x-y).get_mpz_t());
-        q = (q*lAbs)%N;
+        // ----------
+        //  mpz_abs(lAbs.get_mpz_t(), mpz_class(x-y).get_mpz_t());
+        //  q = (q*lAbs)%N;
+        mpz_sub( lAbs.get_mpz_t(), x.get_mpz_t(), y.get_mpz_t() );
+        mpz_abs( lAbs.get_mpz_t(), lAbs.get_mpz_t() );
+
+        mpz_mul( q.get_mpz_t(), q.get_mpz_t(), lAbs.get_mpz_t() );
+        mpz_mod( q.get_mpz_t(), q.get_mpz_t(), N.get_mpz_t() );
+
+        // ----------
       }
 
       mpz_gcd(g.get_mpz_t(), q.get_mpz_t(), N.get_mpz_t());
-      k = k + m;
+
+      // ----------
+      //  k = k + m;
+      mpz_add( k.get_mpz_t(), k.get_mpz_t(), m.get_mpz_t() );
+      // ----------
     }
 
+    timer.Stop();
+    printf( "%lf ", timer.TimeElapsed() );
+
     r = r*2;
+    ++interation;
+    printf("Next!! %u\n", interation);
   }
+
+  std::cout << "g = 1" << std::endl;
 
   if(g==N)
   {
