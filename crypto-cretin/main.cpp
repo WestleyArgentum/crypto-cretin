@@ -219,20 +219,21 @@ int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDi
   timer.Stop();
   printf( "You took %lf seconds to find the file you were looking for!\n", timer.TimeElapsed() );
 
-  std::ifstream in("test.txt", std::ios::binary | std::ios::in);
+  std::ifstream in("test.pdf", std::ios::binary | std::ios::in);
   std::ofstream out("test_enc.txt");
 
   Encrypt(out, in, mpz_class(N).get_mpz_t(), mpz_class("5").get_mpz_t());
+  out.close();
 
   std::ifstream in2("test_enc.txt", std::ios::in);
-  std::ofstream out2("test_dec.txt", std::ios::binary | std::ios::out);
+  std::ofstream out2("test_dec.pdf", std::ios::binary | std::ios::out);
 
   Decrypt(out2, in2);
 
     // Run the application, while the window is running:
-  while ( main_window->Run() )
-  {
-  }
+  //while ( main_window->Run() )
+  //{
+  //}
 
     // Deinit random:
   gmp_randclear(gRandomState);
