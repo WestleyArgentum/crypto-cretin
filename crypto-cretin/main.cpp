@@ -202,6 +202,27 @@ int main_fn( int argc, char* argv[] )
       return -1;
     }
 
+    mpz_class lN( N );
+
+      // Check to see if the chunk size is too large for the N given.
+    mpz_class lLargestNumber = 0;
+    mpz_ui_pow_ui( lLargestNumber.get_mpz_t(), 2, 8 * chunk_size );
+    if ( lN < lLargestNumber )
+    {
+      printf( "Chunk size too large. Find a larger N, or smaller chunk size.\n" );
+
+        // Find the largest chunk size they would be able to use with the N given.
+      do
+      {
+        --chunk_size;
+        mpz_ui_pow_ui( lLargestNumber.get_mpz_t(), 2, 8 * chunk_size );
+      } while ( lN < lLargestNumber );
+
+      printf( "Largest chunk size you can use is %d\n", chunk_size );
+
+      return -1;
+    }
+
       // If the user didn't specify the output file, the output file is the input filename with
       //  and .enc appended onto it.
     if ( output_file.empty() )
@@ -229,7 +250,7 @@ int main_fn( int argc, char* argv[] )
     }
 
       // Encrypt our file with the information given.
-    Encrypt( out, in, mpz_class(N).get_mpz_t(), mpz_class(e).get_mpz_t(), chunk_size );
+    Encrypt( out, in, lN.get_mpz_t(), mpz_class(e).get_mpz_t(), chunk_size );
 
     printf( "File encrypted.\n" );
     return 0;
@@ -319,69 +340,6 @@ int main_fn( int argc, char* argv[] )
     printf( "Unknown first switch [%s]\n", argv[1] );
     return -1;
   }
-
-  std::string N = "15641574130333";
-  std::string p = "3954889",
-              q = "3954997";
-
-  Timer timer;
-
-  BrentManager = new BrentJobManager( mpz_class(N) );
-
-  BrentManager->RunBrentFactorization( 10 );
-
-  //std::string N = "15641574130333";
-  //std::string p = "99990001", 
-  //            q = "2796203";
-
-  //std::string N = "15641574130333";
-  //std::string p = "2147483647", 
-  //            q = "2305843009213693951";
-
-  std::cout << "Generating P...";
-  mpz_class P = 0, Q = 0, lN = 0;
-  mpz_ui_pow_ui(P.get_mpz_t(), 2, 31u);
-  --P;
-  std::cout << " Done" << std::endl;
-  
-  std::cout << "Generating Q...";
-  mpz_ui_pow_ui(Q.get_mpz_t(), 2, 61u);
-  --Q;
-  std::cout << " Done" << std::endl;
-
-  std::cout << "Generating N...";
-  lN = P*Q;
-  std::cout << " Done" << std::endl;
-
-  std::cout << "Beginning factorization...";
-  mpz_class lBrent = BrentFactorization(lN);
-  std::cout << " Done" << std::endl;
-
-  if(lBrent == P || lBrent == Q)
-    std::cout << "P or Q" << std::endl;
-  else if(lBrent == lN)
-    std::cout << "N" << std::endl;
-  else
-    std::cout << "Neither" << std::endl;
-
-  std::cin.get();
-  return 0;
-
-    // Create the job manager to factor the N.
-  BrentManager = new BrentJobManager( mpz_class(N) );
-    // Factor the N:
-  BrentManager->RunBrentFactorization( 10 );
-
-  std::ifstream in("test.pdf", std::ios::binary | std::ios::in);
-  std::ofstream out("test_enc.txt");
-
-  Encrypt(out, in, mpz_class(N).get_mpz_t(), mpz_class("5").get_mpz_t());
-  out.close();
-
-  std::ifstream in2("test_enc.txt", std::ios::in);
-  std::ofstream out2("test_dec.pdf", std::ios::binary | std::ios::out);
-
-  Decrypt(out2, in2);
 }
 
 
