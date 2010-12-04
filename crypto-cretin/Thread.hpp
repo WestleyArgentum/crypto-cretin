@@ -27,6 +27,8 @@ public:
 
 	int Resume () { return ResumeThread (thread_handle); }
 
+  HANDLE GetHandle ()  { return thread_handle; }
+
 	void WaitForDeath ()
 	{
 		WaitForSingleObject (thread_handle, INFINITE);  // Wait forever for the thread to close...
