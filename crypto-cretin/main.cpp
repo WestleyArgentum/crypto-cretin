@@ -1,5 +1,6 @@
 #include "Window.hpp"
 #include "FileDialogs.hpp"
+#include "Timer.hpp"
 
 #include "encrypt.hpp"
 
@@ -160,6 +161,8 @@ int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDi
     // Create debuging console:
   CreateConsole();
 
+  Timer timer;
+
   std::string N = "15641574130333";
   std::string p = "3954889", 
               q = "3954997";
@@ -171,10 +174,13 @@ int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDi
   OpenFileDialog dialog_box( main_window->GetHwnd() );
 
   dialog_box.SetRelativeDir( "." );
+  timer.Start();
   if ( dialog_box.OpenFile() )
   {
     printf( "Opened file: %s\n", dialog_box.GetFileName() );
   }
+  timer.Stop();
+  printf( "You took %lf seconds to find the file you were looking for!\n", timer.TimeElapsed() );
 
   std::ifstream in("test.txt", std::ios::binary | std::ios::in);
   std::ofstream out("test_enc.txt");

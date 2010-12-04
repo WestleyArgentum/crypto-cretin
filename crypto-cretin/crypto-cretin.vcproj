@@ -280,6 +280,18 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="Timer"
+			>
+			<File
+				RelativePath=".\Timer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Timer.hpp"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\main.cpp"
 			>
