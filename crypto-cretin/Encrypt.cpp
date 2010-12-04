@@ -7,7 +7,7 @@
       @author      Chris Schell
  
       @brief
-          Quick implementation of RSA encryption and decryption.
+          Implementation of RSA encryption and decryption.
 
 	  Copyright © 2009 DigiPen (USA) Corporation, All Rights Reserved
     Reproduction or disclosure of this file or its contents without 
@@ -17,44 +17,52 @@
 
 //========================================================\\
 
-void Encrypt(std::ofstream& oStream, std::ifstream& iStream, const mpz_ptr N, const mpz_ptr e)
+unsigned GetFilesize(std::ifstream& in)
 {
-  std::stringstream m;
-  std::string file;
-  unsigned long Size(0);
+  in.seekg(0, std::ios::end);
+  unsigned size = in.tellg();
+  in.seekg(0);
+  return size;
+}
+
+void Encrypt(std::ofstream& out, std::ifstream& in, const mpz_ptr N, const mpz_ptr e, unsigned ChunkSize)
+{
+  unsigned long Size = GetFilesize(in);
 
   mpz_t message;
   mpz_init(message);
 
+  char* data = (char*)::operator new(ChunkSize);
+
+  out << "N "         << N          << std::endl
+      << "E "         << e          << std::endl
+      << "ChunkSize " << ChunkSize  << std::endl
+      << "Size "      << Size;
+
   //while not end of file
-  while(!iStream.eof())
+  while(!in.eof())
   {
+    out << std::endl;
+
     //grab 40 bits from the input file
-    char data[5] = {0,0,0,0,0};
-    iStream.read(data, 5);
-    Size += iStream.gcount();
+    memset(data, 0, ChunkSize);
+    in.read(data, ChunkSize);
 
     //shove those 40 bits into mpz_t: message
-    mpz_import(message, 5, 1, sizeof(char), 1, 0, data);
+    mpz_import(message, ChunkSize, 1, sizeof(char), 1, 0, data);
 
     //m = m^e(mod N)
     mpz_powm(message, message, e, N);
 
     //write out m
-    m << message << std::endl;
-    //file += m.str();
+    out << message;
   }
 
   mpz_clear(message);
-
-  oStream << "N "         << N    << std::endl
-          << "E "         << e    << std::endl
-          << "ChunkSize " << 5    << std::endl
-          << "Size "      << Size << std::endl
-          << m.str() << std::endl;
+  delete data;
 }
 
-void Decrypt(std::ofstream& oStream, std::ifstream& iStream)
+void Decrypt(std::ofstream& out, std::ifstream& in)
 {
   std::string temp;
   mpz_class N;
@@ -62,11 +70,10 @@ void Decrypt(std::ofstream& oStream, std::ifstream& iStream)
   unsigned ChunkSize;
   unsigned long Size;
 
-  iStream >> temp >> N
-          >> temp >> e
-          >> temp >> ChunkSize
-          >> temp >> Size;
-
+  in >> temp >> N
+     >> temp >> e
+     >> temp >> ChunkSize
+     >> temp >> Size;
 
   ///@todo Actually factor N into p and q
   mpz_class p("3954889"),
@@ -81,12 +88,14 @@ void Decrypt(std::ofstream& oStream, std::ifstream& iStream)
 
   Assert(d * mpz_class(e) % phi == mpz_class(1), "e has no inverse. e and phi(N) are most likely not relatively prime.");
 
+  char* data = (char*)::operator new(ChunkSize);
+
    //while not end of file
-  while(!iStream.eof())
+  while(!in.eof())
   {
     //grab line
     std::string message;
-    iStream >> message;
+    in >> message;
 
     if(message.empty() || message[0] == '/n')
       return;
@@ -98,15 +107,16 @@ void Decrypt(std::ofstream& oStream, std::ifstream& iStream)
     mpz_powm(m.get_mpz_t(), m.get_mpz_t(), d.get_mpz_t(), N.get_mpz_t());
 
     //shove m into 40 bit buffer
-    char data[5] = {0,0,0,0,0};
-    mpz_export(data, 0, 1, sizeof data, 1, 0, m.get_mpz_t());
+    memset(data, 0, sizeof(char) * ChunkSize);
+    mpz_export(data, 0, 1, ChunkSize, 1, 0, m.get_mpz_t());
 
     unsigned SizeToWrite = std::min(ChunkSize, unsigned(Size));
 
     //write out m binary
-    oStream.write(data, SizeToWrite);
+    out.write(data, SizeToWrite);
 
     Size -= ChunkSize;
   }
 
+  delete data;
 }
