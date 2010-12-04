@@ -4,5 +4,7 @@
 void CreateConsole( void );
 void RemoveConsole( void );
 
+PCHAR* CommandLineToArgvA( PCHAR CmdLine, int *_argc );
+
 #endif
 
