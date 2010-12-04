@@ -17,21 +17,22 @@
 
 //========================================================\\
 
-///@todo: Currently, if the last chuck of data is smaller that 40bits, when the file is decoded, 
-///       0's are padded on the end, making the file slightly larger and different from the original
-///       This needs to be fixed.
-
 void Encrypt(std::ofstream& oStream, std::ifstream& iStream, const mpz_ptr N, const mpz_ptr e)
 {
+  std::stringstream m;
+  std::string file;
+  unsigned long Size(0);
+
+  mpz_t message;
+  mpz_init(message);
+
   //while not end of file
   while(!iStream.eof())
   {
-    mpz_t message;
-    mpz_init(message);
-
     //grab 40 bits from the input file
     char data[5] = {0,0,0,0,0};
     iStream.read(data, 5);
+    Size += iStream.gcount();
 
     //shove those 40 bits into mpz_t: message
     mpz_import(message, 5, 1, sizeof(char), 1, 0, data);
@@ -40,12 +41,33 @@ void Encrypt(std::ofstream& oStream, std::ifstream& iStream, const mpz_ptr N, co
     mpz_powm(message, message, e, N);
 
     //write out m
-    oStream << message << std::endl;
+    m << message << std::endl;
+    //file += m.str();
   }
+
+  mpz_clear(message);
+
+  oStream << "N "         << N    << std::endl
+          << "E "         << e    << std::endl
+          << "ChunkSize " << 5    << std::endl
+          << "Size "      << Size << std::endl
+          << m.str() << std::endl;
 }
 
-void Decrypt(std::ofstream& oStream, std::ifstream& iStream, const mpz_ptr N, const mpz_ptr e)
+void Decrypt(std::ofstream& oStream, std::ifstream& iStream)
 {
+  std::string temp;
+  mpz_class N;
+  mpz_class e;
+  unsigned ChunkSize;
+  unsigned long Size;
+
+  iStream >> temp >> N
+          >> temp >> e
+          >> temp >> ChunkSize
+          >> temp >> Size;
+
+
   ///@todo Actually factor N into p and q
   mpz_class p("3954889"),
             q("3954997");
@@ -55,7 +77,7 @@ void Decrypt(std::ofstream& oStream, std::ifstream& iStream, const mpz_ptr N, co
 
   //get d = multinv(e, phi(N))
   mpz_class d(0);
-  mpz_invert(d.get_mpz_t(), e, phi.get_mpz_t());
+  mpz_invert(d.get_mpz_t(), e.get_mpz_t(), phi.get_mpz_t());
 
   Assert(d * mpz_class(e) % phi == mpz_class(1), "e has no inverse. e and phi(N) are most likely not relatively prime.");
 
@@ -73,14 +95,18 @@ void Decrypt(std::ofstream& oStream, std::ifstream& iStream, const mpz_ptr N, co
     mpz_class m(message);
 
     //m = m^d(mod N)
-    mpz_powm(m.get_mpz_t(), m.get_mpz_t(), d.get_mpz_t(), N);
+    mpz_powm(m.get_mpz_t(), m.get_mpz_t(), d.get_mpz_t(), N.get_mpz_t());
 
     //shove m into 40 bit buffer
     char data[5] = {0,0,0,0,0};
-    mpz_export(data, 0, 1, sizeof(data), 1, 0, m.get_mpz_t());
+    mpz_export(data, 0, 1, sizeof data, 1, 0, m.get_mpz_t());
+
+    unsigned SizeToWrite = std::min(ChunkSize, unsigned(Size));
 
     //write out m binary
-    oStream.write(data, 5);
+    oStream.write(data, SizeToWrite);
+
+    Size -= ChunkSize;
   }
 
 }
