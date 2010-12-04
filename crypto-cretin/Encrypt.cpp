@@ -17,6 +17,9 @@
 
 //========================================================\\
 
+#include "BrentJob.hpp"
+
+
 unsigned GetFilesize(std::ifstream& in)
 {
   in.seekg(0, std::ios::end);
@@ -75,9 +78,11 @@ void Decrypt(std::ofstream& out, std::ifstream& in)
      >> temp >> ChunkSize
      >> temp >> Size;
 
-  ///@todo Actually factor N into p and q
-  mpz_class p("3954889"),
-            q("3954997");
+  BrentManager.Init( mpz_class(N) );
+  BrentManager.RunBrentFactorization( 10 );
+  mpz_class p = BrentManager.GetResult();
+  mpz_class q = N / p;
+
 
   //get phi(N) = (p-1)(q-1)
   mpz_class phi = (p-1)*(q-1);

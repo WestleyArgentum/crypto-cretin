@@ -340,6 +340,10 @@ int main_fn( int argc, char* argv[] )
     printf( "Unknown first switch [%s]\n", argv[1] );
     return -1;
   }
+
+  /*std::string N = "15641574130333";
+  std::string p = "3954889",
+              q = "3954997";*/
 }
 
 
@@ -347,7 +351,10 @@ int main_fn( int argc, char* argv[] )
 int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDisplayParameters)
 {
     // Randomness initialization:
-  gmp_randinit_default(gRandomState);
+  {
+    Lock lock ( mutex_gRandom );
+    gmp_randinit_default(gRandomState);
+  }
 
     // Create debuging console:
   CreateConsole();
@@ -360,7 +367,10 @@ int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDi
   int return_code = main_fn( argc, argv );
 
     // Deinit random:
-  gmp_randclear(gRandomState);
+  {
+    Lock lock ( mutex_gRandom );
+    gmp_randclear(gRandomState);
+  }
 
   printf( "Press enter to continue...\n" );
   std::cin.get();

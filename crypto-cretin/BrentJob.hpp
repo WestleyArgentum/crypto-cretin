@@ -18,16 +18,28 @@ public:
     BrentJobManager ()  {;}
     ~BrentJobManager ();
 
-    void Init ( mpz_class N_ )  { N = N_; }
+    void Init ( mpz_class N_ )
+    {
+      N = N_;
+
+      Lock lock ( mutex_result );
+      result = N;
+    }
 
     void RunBrentFactorization( unsigned num_iterations = 4 );
+
+    mpz_class GetResult ();
 
 private:
     friend void ResultBrentFactorization ( unsigned id );
 
     std::vector<BrentJob*> jobs;
+    std::vector<HANDLE> handles;
     Mutex mutex_jobs;
     mpz_class N;
+
+    mpz_class result;
+    Mutex mutex_result;
 
     
 };
@@ -46,8 +58,8 @@ mpz_class BrentFactorization(const mpz_class &N);
 class BrentJob : public SD::ActiveObject
 {
 public:
-    BrentJob ( mpz_class N_, unsigned id, SD::ActiveObject::StaticFunction callback_fn )
-        : ActiveObject(id, callback_fn), N( N_ )
+    BrentJob ( mpz_class N_, mpz_class& result_, Mutex& mutex_result_, unsigned id, SD::ActiveObject::StaticFunction callback_fn )
+        : ActiveObject(id, callback_fn), N( N_ ), result( result_ ), mutex_result( mutex_result_ )
     {}
 
     virtual ~BrentJob ()
@@ -60,9 +72,8 @@ protected:
 
 private:
     mpz_class N;
-
-public:  // hack
-    mpz_class result;
+    mpz_class& result;
+    Mutex& mutex_result;
 
 };
 
