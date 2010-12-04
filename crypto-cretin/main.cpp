@@ -88,7 +88,10 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDisplayParameters)
 {
     // Randomness initialization:
-  gmp_randinit_default(gRandomState);
+  {
+    Lock lock ( mutex_gRandom );
+    gmp_randinit_default(gRandomState);
+  }
 
     // Create debuging console:
   CreateConsole();
@@ -99,9 +102,9 @@ int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDi
   std::string p = "3954889", 
               q = "3954997";
 
-  BrentManager = new BrentJobManager( mpz_class(N) );
+  BrentManager.Init( mpz_class(N) );
 
-  BrentManager->RunBrentFactorization( 10 );
+  BrentManager.RunBrentFactorization( 10 );
 
   //std::string N = "15641574130333";
   //std::string p = "99990001", 
@@ -172,7 +175,10 @@ int CALLBACK WinMain(HINSTANCE iInstance, HINSTANCE, LPSTR iCommandLine, int iDi
   //}
 
     // Deinit random:
-  gmp_randclear(gRandomState);
+  {
+    Lock lock ( mutex_gRandom );
+    gmp_randclear(gRandomState);
+  }
 
   return main_window->ReturnCode();
 }

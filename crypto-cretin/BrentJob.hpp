@@ -15,10 +15,10 @@ class BrentJob;
 class BrentJobManager
 {
 public:
-    BrentJobManager ( mpz_class N_ ) : N(N_)
-    {}
-
+    BrentJobManager ()  {;}
     ~BrentJobManager ();
+
+    void Init ( mpz_class N_ )  { N = N_; }
 
     void RunBrentFactorization( unsigned num_iterations = 4 );
 
@@ -32,11 +32,12 @@ private:
     
 };
 
-extern BrentJobManager* BrentManager;
+extern BrentJobManager BrentManager;
 
 
 // Factorization --------------------------------------
 extern gmp_randstate_t gRandomState;
+extern Mutex mutex_gRandom;
 
 mpz_class BrentFactorization(const mpz_class &N);
 
@@ -60,7 +61,7 @@ protected:
 private:
     mpz_class N;
 
-public:
+public:  // hack
     mpz_class result;
 
 };

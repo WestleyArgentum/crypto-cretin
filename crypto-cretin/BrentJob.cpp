@@ -4,11 +4,10 @@
 #include "BrentJob.hpp"
 
 
-//static unsigned BRENT_COUNT = 0;
-//Mutex Mutex_Brent_Count;
+BrentJobManager BrentManager;
 
-BrentJobManager* BrentManager = NULL;
 gmp_randstate_t gRandomState;
+Mutex mutex_gRandom;
 
 
 BrentJobManager::~BrentJobManager ()
@@ -16,10 +15,10 @@ BrentJobManager::~BrentJobManager ()
     Lock lock( mutex_jobs );
 
     for ( unsigned i = 0; i < jobs.size(); ++i )
+    {
         jobs[i]->Kill();
-
-    //^! leaking memory caused by dynamic allocation of BrentJobs!
-    //   I need to wait for the jobs to all finish before returning.
+        delete jobs[i];
+    }
 }
 
 
@@ -47,9 +46,13 @@ mpz_class BrentFactorization(const mpz_class &N)
         ys = 0,
         c = 0,
         m = 0;
+
+    {
+    Lock lock( mutex_gRandom );
     mpz_urandomm(y.get_mpz_t(), gRandomState, N.get_mpz_t());
     mpz_urandomm(c.get_mpz_t(), gRandomState, N.get_mpz_t());
     mpz_urandomm(m.get_mpz_t(), gRandomState, N.get_mpz_t());
+    }
 
     mpz_class g = 1,
         r = 1,
@@ -127,16 +130,16 @@ void BrentJob::FlushThread()
 void ResultBrentFactorization ( unsigned id )
 {
     {
-        Lock ( BrentManager->mutex_jobs );
+        Lock ( BrentManager.mutex_jobs );
 
-        if ( BrentManager->jobs[id]->result != BrentManager->N )
+        if ( BrentManager.jobs[id]->result != BrentManager.N )
         {
             // call decryption function here
-            std::cout << BrentManager->jobs[id]->result << std::endl;
+            std::cout << BrentManager.jobs[id]->result << std::endl;
             std::cout.flush();
             return;
         }
     }
 
-    BrentManager->RunBrentFactorization(1);  // add a new job
+    BrentManager.RunBrentFactorization(1);  // add a new job
 }
